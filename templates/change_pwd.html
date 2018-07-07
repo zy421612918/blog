@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block nav_home_active %}active{% endblock %}
+{% block content %}
+    <div class="containter">
+        <div class="row">
+            <div class="col-xs-4 col-xs-offset-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ form_title }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form action="{% url 'change_pwd' %}" method="POST">
+                            {% csrf_token %}
+                            <label for="">{{ form.password1.label }}</label>
+                            {{ form.password1 }}
+                            <label for="">{{ form.password2.label }}</label>
+                            {{ form.password2 }}
+
+                            <label for="">绑定的邮箱</label>
+                            <input id="id_email" class="form-control" type="text" value="{{ request.user.email }}" readonly="readonly" name="email">
+                             <label for="">{{ form.verification.label }}</label>
+                            {{ form.verification }}
+                            <span id="tip" class="text-danger">{{ form.non_field_errors }}</span>
+                            <div class="clearfix"></div>
+                            <div class="pull-left">
+                                <button id="send_code" class="btn btn-primary">发送验证码</button>
+                            </div>
+                            <div class="pull-right">
+                                <input type="submit" value="提交" class="btn btn-primary">
+                                <button class="btn btn-default" onclick="window.location.href='{{ return_back }}'">返回</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+
+    <script type="text/javascript">
+
+    $('#send_code').click(function () {
+         var email =$('#id_email').val();
+        if(email==''){
+             $('#tip').text('邮箱不能为空');
+             return false;
+        }
+        //发送邮箱验证码
+        $.ajax({
+            url:'{% url 'send_email' %}',
+            type:'GET',
+            data:{
+                'email':email,
+                'type':'changepassword',
+            },
+            cache:false,
+            success:function (data) {
+                if(data['status']=='ERROR'){
+                 alert(data['status'])
+
+                }
+
+
+            }
+        });
+          // 把按钮变灰
+            $(this).addClass('disabled');
+            $(this).attr('disabled', true);
+            var time = 30;
+            $(this).text(time + 's');
+            var interval = setInterval(() => {
+                if(time <= 0){
+                    clearInterval(interval);
+                    $(this).removeClass('disabled');
+                    $(this).attr('disabled', false);
+                    $(this).text('发送验证码');
+                    return false;
+                }
+
+                time --;
+                $(this).text(time + 's');
+            }, 1000);
+
+
+    })
+
+
+    </script>
+
+{% endblock %}
